@@ -30,7 +30,7 @@ RUN set -eux; \
     grep -q 'NGINX_WORKER_PROCESSES' /etc/nginx/nginx.conf.template; \
     chmod 755 /usr/local/bin/railway-start /opt/railway/first-boot.sh /opt/railway/typesense.sh \
       /etc/s6-overlay/s6-rc.d/typesense/run /etc/s6-overlay/s6-rc.d/reverb/run \
-      /etc/s6-overlay/s6-rc.d/php-fpm/finish; \
+      /etc/s6-overlay/s6-rc.d/php-fpm/finish /etc/s6-overlay/s6-rc.d/nginx/finish; \
     chown www-data:www-data /etc/nginx; \
     chown -R www-data:www-data /etc/nginx/trusted-proxy
 

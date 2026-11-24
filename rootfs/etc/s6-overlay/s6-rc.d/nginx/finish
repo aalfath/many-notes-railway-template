@@ -1,0 +1,5 @@
+#!/bin/sh
+# If the nginx master dies, its workers keep the port and every restart fails
+# with "Address already in use". Clear them so s6 can start a fresh master.
+pkill -9 -f '^nginx: worker process' 2>/dev/null || true
+exit 0
