@@ -47,5 +47,9 @@ fi
 [ "$cpus" -le 4 ] || cpus=4
 export NGINX_WORKER_PROCESSES="$cpus" TYPESENSE_THREADS=$(( cpus * 2 ))
 
+# Hand stdout/stderr to www-data, as Docker does for a non-root USER, so
+# php-fpm and nginx can reopen /proc/self/fd/1 and /proc/self/fd/2.
+chown www-data:www-data /proc/self/fd/1 /proc/self/fd/2 2>/dev/null || true
+
 exec setpriv --reuid=www-data --regid=www-data --init-groups --inh-caps=-all \
   env HOME=/var/www docker-php-serversideup-entrypoint "$@"
