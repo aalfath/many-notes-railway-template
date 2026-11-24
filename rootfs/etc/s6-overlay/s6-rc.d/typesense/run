@@ -1,0 +1,6 @@
+#!/command/with-contenv sh
+# Search index for Many Notes: loopback only, key from the start script.
+exec /opt/typesense-server --data-dir=/data/typesense --api-key="$TYPESENSE_API_KEY" \
+  --api-address=127.0.0.1 --api-port=8108 --peering-address=127.0.0.1 \
+  --thread-pool-size="${TYPESENSE_THREADS:-4}" --num-collections-parallel-load=1 \
+  --num-documents-parallel-load=200

@@ -1,0 +1,3 @@
+#!/command/with-contenv sh
+# Real-time updates (WebSocket); nginx proxies /ws to it.
+exec /usr/local/bin/php /var/www/html/artisan reverb:start --host=127.0.0.1 --port=6001

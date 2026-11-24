@@ -1,0 +1,51 @@
+#!/bin/sh
+# Railway start script for Many Notes. Runs as root, prepares /data, then
+# drops to www-data and hands over to the upstream entrypoint (s6-overlay).
+set -eu
+
+DATA=/data
+mkdir -p "$DATA/database" "$DATA/private" "$DATA/public" "$DATA/typesense"
+[ -f "$DATA/database/database.sqlite" ] || touch "$DATA/database/database.sqlite"
+for d in "$DATA" "$DATA/database" "$DATA/database/database.sqlite" "$DATA/private" "$DATA/public" "$DATA/typesense"; do
+  [ "$(stat -c %u "$d")" = 33 ] || chown -R www-data:www-data "$d"
+done
+
+# Port: Railway sets PORT; nginx listens on it.
+export NGINX_HTTP_PORT="${PORT:-8080}"
+
+# Public URL: APP_URL if it is a full URL, else the Railway domain.
+case "${APP_URL:-}" in
+  http://?*|https://?*) : ;;
+  *) if [ -n "${RAILWAY_PUBLIC_DOMAIN:-}" ]; then APP_URL="https://${RAILWAY_PUBLIC_DOMAIN}"; else APP_URL="http://localhost:${NGINX_HTTP_PORT}"; fi ;;
+esac
+APP_URL="${APP_URL%/}"
+export APP_URL
+case "$APP_URL" in https://*) export SESSION_SECURE_COOKIE=true ;; esac
+
+# Secrets: never run on the public keys baked into the upstream image.
+if [ -z "${APP_KEY:-}" ] || [ "${#APP_KEY}" -lt 32 ]; then
+  echo "railway-start: APP_KEY must be set (32 characters, the template generates it)" >&2
+  exit 1
+fi
+case "$APP_KEY" in base64:*) : ;; *) APP_KEY="$(printf '%s' "$APP_KEY" | cut -c1-32)" ;; esac
+export APP_KEY
+if [ -z "${REVERB_APP_SECRET:-}" ]; then
+  echo "railway-start: REVERB_APP_SECRET must be set (the template generates it)" >&2
+  exit 1
+fi
+# The bundled Typesense listens on loopback only, with a fresh key each boot.
+TYPESENSE_API_KEY="$(od -An -N24 -tx1 /dev/urandom | tr -d ' \n')"
+export TYPESENSE_API_KEY TYPESENSE_HOST=127.0.0.1 TYPESENSE_PORT=8108
+
+# Size workers from the container's CPU limit, not the host's CPU count.
+cpus=2
+if [ -r /sys/fs/cgroup/cpu.max ]; then
+  read -r q p < /sys/fs/cgroup/cpu.max || true
+  if [ "${q:-max}" != max ] && [ -n "${p:-}" ]; then cpus=$(( (q + p - 1) / p )); fi
+fi
+[ "$cpus" -ge 1 ] || cpus=1
+[ "$cpus" -le 4 ] || cpus=4
+export NGINX_WORKER_PROCESSES="$cpus" TYPESENSE_THREADS=$(( cpus * 2 ))
+
+exec setpriv --reuid=www-data --regid=www-data --init-groups --inh-caps=-all \
+  env HOME=/var/www docker-php-serversideup-entrypoint "$@"
