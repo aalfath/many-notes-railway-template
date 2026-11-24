@@ -30,6 +30,7 @@ RUN set -eux; \
     grep -q 'NGINX_WORKER_PROCESSES' /etc/nginx/nginx.conf.template; \
     chmod 755 /usr/local/bin/railway-start /etc/entrypoint.d/80-railway-admin.sh \
       /etc/s6-overlay/s6-rc.d/typesense/run /etc/s6-overlay/s6-rc.d/reverb/run; \
+    chown www-data:www-data /etc/nginx; \
     chown -R www-data:www-data /etc/nginx/trusted-proxy
 
 # Starts as root only to prepare the volume, then drops to www-data.
