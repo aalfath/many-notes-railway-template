@@ -14,9 +14,7 @@ php artisan config:clear -q
 php artisan migrate --force -q
 
 # Bundled Typesense on loopback, only for these steps.
-/opt/typesense-server --data-dir=/data/typesense --api-key="$TYPESENSE_API_KEY" \
-  --api-address=127.0.0.1 --api-port=8108 --peering-address=127.0.0.1 \
-  --thread-pool-size=2 >/tmp/typesense-first-boot.log 2>&1 &
+/opt/railway/typesense.sh >/tmp/typesense-first-boot.log 2>&1 &
 ts=$!
 stop_ts() { kill "$ts" 2>/dev/null || true; wait "$ts" 2>/dev/null || true; }
 trap stop_ts EXIT

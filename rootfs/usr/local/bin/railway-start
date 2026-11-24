@@ -45,7 +45,7 @@ if [ -r /sys/fs/cgroup/cpu.max ]; then
 fi
 [ "$cpus" -ge 1 ] || cpus=1
 [ "$cpus" -le 4 ] || cpus=4
-export NGINX_WORKER_PROCESSES="$cpus" TYPESENSE_THREADS=$(( cpus * 2 ))
+export NGINX_WORKER_PROCESSES="$cpus" TYPESENSE_THREADS="$cpus"
 
 # Hand stdout/stderr to www-data, as Docker does for a non-root USER, so
 # php-fpm and nginx can reopen /proc/self/fd/1 and /proc/self/fd/2.
