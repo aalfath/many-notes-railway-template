@@ -2,8 +2,9 @@
 # First boot on Railway: create the admin from ADMIN_EMAIL / ADMIN_PASSWORD and
 # close open sign-up, before nginx opens the public port. Runs after the
 # migrations (50) and upstream upgrades (75). A failure stops the container.
-php /opt/railway/bootstrap-admin.php --check
-rc=$?
+# The upstream entrypoint sources this file with `set -e`, so catch exit codes.
+rc=0
+php /opt/railway/bootstrap-admin.php --check || rc=$?
 [ "$rc" -eq 10 ] && exit 0
 if [ "$rc" -ne 0 ]; then
   echo "railway: could not read the users table (exit $rc), refusing to start" >&2
@@ -28,10 +29,10 @@ until curl -fsS http://127.0.0.1:8108/health >/dev/null 2>&1; do
   sleep 1
 done
 
-php /opt/railway/bootstrap-admin.php
-rc=$?
-kill "$ts" 2>/dev/null
-wait "$ts" 2>/dev/null
+rc=0
+php /opt/railway/bootstrap-admin.php || rc=$?
+kill "$ts" 2>/dev/null || true
+wait "$ts" 2>/dev/null || true
 if [ "$rc" -ne 0 ]; then
   echo "railway: admin bootstrap failed, refusing to start with open sign-up" >&2
   exit 1
