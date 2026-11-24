@@ -1,0 +1,6 @@
+#!/bin/sh
+# If the php-fpm master dies (OOM kill, crash), its pool workers keep port 9000
+# and every restart fails with "Address already in use". Clear them so s6 can
+# start a fresh master.
+pkill -9 -f '^php-fpm: pool ' 2>/dev/null || true
+exit 0

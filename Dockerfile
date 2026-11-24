@@ -29,7 +29,8 @@ RUN set -eux; \
     sed -i 's/^worker_processes .*/worker_processes  ${NGINX_WORKER_PROCESSES};/' /etc/nginx/nginx.conf.template; \
     grep -q 'NGINX_WORKER_PROCESSES' /etc/nginx/nginx.conf.template; \
     chmod 755 /usr/local/bin/railway-start /opt/railway/first-boot.sh /opt/railway/typesense.sh \
-      /etc/s6-overlay/s6-rc.d/typesense/run /etc/s6-overlay/s6-rc.d/reverb/run; \
+      /etc/s6-overlay/s6-rc.d/typesense/run /etc/s6-overlay/s6-rc.d/reverb/run \
+      /etc/s6-overlay/s6-rc.d/php-fpm/finish; \
     chown www-data:www-data /etc/nginx; \
     chown -R www-data:www-data /etc/nginx/trusted-proxy
 
