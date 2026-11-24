@@ -51,5 +51,12 @@ export NGINX_WORKER_PROCESSES="$cpus" TYPESENSE_THREADS=$(( cpus * 2 ))
 # php-fpm and nginx can reopen /proc/self/fd/1 and /proc/self/fd/2.
 chown www-data:www-data "/proc/$$/fd/1" "/proc/$$/fd/2" || true
 
+as_www() { setpriv --reuid=www-data --regid=www-data --init-groups --inh-caps=-all env HOME=/var/www "$@"; }
+
+if ! as_www sh /opt/railway/first-boot.sh; then
+  echo "railway-start: first-boot setup failed, stopping (sign-up is not opened)" >&2
+  exit 1
+fi
+
 exec setpriv --reuid=www-data --regid=www-data --init-groups --inh-caps=-all \
   env HOME=/var/www docker-php-serversideup-entrypoint "$@"
